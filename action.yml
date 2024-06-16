@@ -7,7 +7,7 @@ branding:
 inputs:
   args:
     description: 'The message to display in the Discord message.'
-    required: true
+    required: false
   # TODO: Handle configuration through Action inputs.
 runs:
   using: 'docker'
