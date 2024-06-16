@@ -57,6 +57,10 @@ if (argv._.length === 0 && !process.env.DISCORD_EMBEDS) {
     process.exit(1);
   }
 
+  if (message) {
+    content += `\n${ message }`
+  }
+
   url = process.env.DISCORD_WEBHOOK;
   payload = JSON.stringify({
     content: content,
