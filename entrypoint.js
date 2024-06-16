@@ -10,17 +10,10 @@ const REQUIRED_ENV_VARS = [
   'GITHUB_ACTOR',
   'GITHUB_EVENT_NAME',
   'GITHUB_ACTION',
-  'DISCORD_WEBHOOK',
-  'GITHUB_EVENT_COMMITS',
-  'GITHUB_EVENT_HEAD_COMMIT'
+  'DISCORD_WEBHOOK'
 ];
 
 process.env.GITHUB_ACTION = process.env.GITHUB_ACTION || '<missing GITHUB_ACTION env var>';
-
-console.log("process.env:", process.env)
-console.log("GITHUB_EVENT_COMMITS", JSON.parse(process.env.GITHUB_EVENT_COMMITS))
-console.log("GITHUB_EVENT_HEAD_COMMIT", JSON.parse(process.env.GITHUB_EVENT_HEAD_COMMIT))
-console.log("argv", argv)
 
 REQUIRED_ENV_VARS.forEach(env => {
   if (!process.env[env] || !process.env[env].length) {
@@ -38,30 +31,11 @@ _.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
 let url;
 let payload;
 console.log("eventContent: ", eventContent)
-if (argv._.length === 0 && !process.env.DISCORD_EMBEDS) {
+if (argv._.length === 0 && !process.env.DISCORD_EMBEDS || true) {
   // If argument and embeds NOT provided, let Discord show the event informations.
   url = `${process.env.DISCORD_WEBHOOK}/github`;
   payload = JSON.stringify(JSON.parse(eventContent));
 } else {
-  // Otherwise, if the argument or embeds are provided, let Discord override the message.
-  const args = argv._.join(' ');
-  const message = _.template(args)({ ...process.env, EVENT_PAYLOAD: JSON.parse(eventContent) });
-  console.log("message", message)
-  let embedsObject;
-  let content;
-  try {
-    const commits = JSON.parse(process.env.GITHUB_EVENT_COMMITS);
-    const headCommit = JSON.parse(process.env.GITHUB_EVENT_HEAD_COMMIT);
-    content = getCommitMessage(commits, headCommit)
-  } catch (parseErr) {
-    console.error('Error parsing DISCORD_EMBEDS :' + parseErr);
-    process.exit(1);
-  }
-
-  if (message) {
-    content += `\n${ message }`
-  }
-
   url = process.env.DISCORD_WEBHOOK;
   payload = JSON.stringify({
     content: content,
@@ -93,20 +67,20 @@ if (argv._.length === 0 && !process.env.DISCORD_EMBEDS) {
   process.exit(1);
 });
 
-function getCommitMessage(commits, headCommit) {
-  if (commits === null) {
-    return `Build ${ process.env.GITHUB_REPOSITORY }#${ process.env.GITHUB_REF_NAME }\nManually build by ${ process.env.GITHUB_ACTOR }\n`
-  }
-  let stringCommits = ''
-  for (let i = 0; i < 5 && i < commits.length-1 ; i++) {
-    stringCommits += `- ${commits[i].message} by ${commits[i].author.username}\n`
-  }
-  if (commits.length > 5) {
-    stringCommits += `... and ${commits.length - 5} more commit(s)\n`
-  }
-  let message = `Triggered ${ process.env.GITHUB_REPOSITORY }#${ process.env.GITHUB_REF_NAME }\nBuild triggered by ${ headCommit.author.username } with commit message: ${ headCommit.message }\n`
-  if (stringCommits) {
-    message += `\nCommits:\n${stringCommits}`
-  }
-  return message
-}
+// function getCommitMessage(commits, headCommit) {
+//   if (commits === null) {
+//     return `Build ${ process.env.GITHUB_REPOSITORY }#${ process.env.GITHUB_REF_NAME }\nManually build by ${ process.env.GITHUB_ACTOR }\n`
+//   }
+//   let stringCommits = ''
+//   for (let i = 0; i < 5 && i < commits.length-1 ; i++) {
+//     stringCommits += `- ${commits[i].message} by ${commits[i].author.username}\n`
+//   }
+//   if (commits.length > 5) {
+//     stringCommits += `... and ${commits.length - 5} more commit(s)\n`
+//   }
+//   let message = `Triggered ${ process.env.GITHUB_REPOSITORY }#${ process.env.GITHUB_REF_NAME }\nBuild triggered by ${ headCommit.author.username } with commit message: ${ headCommit.message }\n`
+//   if (stringCommits) {
+//     message += `\nCommits:\n${stringCommits}`
+//   }
+//   return message
+// }
