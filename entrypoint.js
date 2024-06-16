@@ -37,7 +37,7 @@ _.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
 
 let url;
 let payload;
-
+console.log("eventContent: ", eventContent)
 if (argv._.length === 0 && !process.env.DISCORD_EMBEDS) {
   // If argument and embeds NOT provided, let Discord show the event informations.
   url = `${process.env.DISCORD_WEBHOOK}/github`;
