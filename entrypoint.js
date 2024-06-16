@@ -506,6 +506,8 @@ payload = {
     "site_admin": false
   }
 };
+
+payload = JSON.stringify(payload)
 (async () => {
   console.log('Sending message ...');
   await axios.post(
