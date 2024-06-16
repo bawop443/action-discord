@@ -10,7 +10,9 @@ const REQUIRED_ENV_VARS = [
   'GITHUB_ACTOR',
   'GITHUB_EVENT_NAME',
   'GITHUB_ACTION',
-  'DISCORD_WEBHOOK'
+  'DISCORD_WEBHOOK',
+  'GITHUB_EVENT_COMMITS',
+  'GITHUB_EVENT_HEAD_COMMIT'
 ];
 
 process.env.GITHUB_ACTION = process.env.GITHUB_ACTION || '<missing GITHUB_ACTION env var>';
@@ -45,18 +47,19 @@ if (argv._.length === 0 && !process.env.DISCORD_EMBEDS) {
   const message = _.template(args)({ ...process.env, EVENT_PAYLOAD: JSON.parse(eventContent) });
 
   let embedsObject;
-  if (process.env.DISCORD_EMBEDS) {
-     try {
-        embedsObject = JSON.parse(process.env.DISCORD_EMBEDS);
-     } catch (parseErr) {
-       console.error('Error parsing DISCORD_EMBEDS :' + parseErr);
-       process.exit(1);
-     }
+  let content;
+  try {
+    const commits = JSON.parse(process.env.GITHUB_EVENT_COMMITS);
+    const headCommit = JSON.parse(process.env.GITHUB_EVENT_HEAD_COMMIT);
+    content = getCommitMessage(commits, headCommit)
+  } catch (parseErr) {
+    console.error('Error parsing DISCORD_EMBEDS :' + parseErr);
+    process.exit(1);
   }
 
   url = process.env.DISCORD_WEBHOOK;
   payload = JSON.stringify({
-    content: message,
+    content: content,
     ...process.env.DISCORD_EMBEDS && { embeds: embedsObject },
     ...process.env.DISCORD_USERNAME && { username: process.env.DISCORD_USERNAME },
     ...process.env.DISCORD_AVATAR && { avatar_url: process.env.DISCORD_AVATAR },
@@ -84,3 +87,21 @@ if (argv._.length === 0 && !process.env.DISCORD_EMBEDS) {
   console.error('Message :', err.response ? err.response.data : err.message);
   process.exit(1);
 });
+
+function getCommitMessage(commits, headCommit) {
+  if (commits === null) {
+    return `Build ${ process.env.GITHUB_REPOSITORY }#${ process.env.GITHUB_REF_NAME }\nManually build by ${ process.env.GITHUB_ACTOR }\n`
+  }
+  let stringCommits = ''
+  for (let i = 0; i < 5 && i < commits.length-1 ; i++) {
+    stringCommits += `- ${commits[i].message} by ${commits[i].author.username}\n`
+  }
+  if (commits.length > 5) {
+    stringCommits += `... and ${commits.length - 5} more commit(s)\n`
+  }
+  let message = `Triggered ${ process.env.GITHUB_REPOSITORY }#${ process.env.GITHUB_REF_NAME }\nBuild triggered by ${ headCommit.author.username } with commit message: ${ headCommit.message }\n`
+  if (stringCommits) {
+    message += `\nCommits:\n${stringCommits}`
+  }
+  return message
+}
