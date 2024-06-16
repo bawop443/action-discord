@@ -20,6 +20,7 @@ process.env.GITHUB_ACTION = process.env.GITHUB_ACTION || '<missing GITHUB_ACTION
 console.log("process.env:", process.env)
 console.log("GITHUB_EVENT_COMMITS", JSON.parse(process.env.GITHUB_EVENT_COMMITS))
 console.log("GITHUB_EVENT_HEAD_COMMIT", JSON.parse(process.env.GITHUB_EVENT_HEAD_COMMIT))
+console.log("message", message)
 
 REQUIRED_ENV_VARS.forEach(env => {
   if (!process.env[env] || !process.env[env].length) {
