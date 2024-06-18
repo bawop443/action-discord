@@ -70,7 +70,7 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
 
         **Repository**: ${process.env.GITHUB_REPOSITORY}
 
-        **Commit**: ${JSON.stringify(eventContent.commits)}`
+        **Commit**: [${eventContent.head_commit?.id?.slice(0, 7)}](${eventContent.head_commit?.url}) ${eventContent.head_commit?.message} - ${eventContent.head_commit?.author?.username}`
       }
     ]
   }
