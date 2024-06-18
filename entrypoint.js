@@ -85,6 +85,7 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
     process.exit(0);
   } catch (error) {
     console.error('Error :', error.response.status, error.response.statusText);
+    console.error('Full Error: ', error)
     console.error('Message :', error.response ? error.response.data : error.message);
     process.exit(1);
   }
