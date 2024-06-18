@@ -67,8 +67,10 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
         url: eventContent.head_commit?.url + '/checks',
         description: 
         `**Workflow**: ${workflow}
+
         **Repository**: ${process.env.GITHUB_REPOSITORY}
-        **Commit**: ${eventContent.commits}`
+
+        **Commit**: ${JSON.stringify(eventContent.commits)}`
       }
     ]
   }
