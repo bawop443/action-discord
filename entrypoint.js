@@ -55,17 +55,19 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
   const payload = {
     username: username || 'MC - Deploy Notification',
     avatar_url: avatarUrl || 'https://cdn.discordapp.com/attachments/988683025942454312/1095604009252966482/image_1.png?ex=666fdebf&is=666e8d3f&hm=8a919283a14b81683dc7cc5a4aa61e5117fc8769f8ac85bcb4d4fe1f24263e61&',
-    embeds: {
-      author: {
-        name: eventContent.sender?.login,
-        url: eventContent.sender?.avatar_url,
-        icon_url: eventContent.sender?.html_url
-      },
-      color: color,
-      title: title,
-      url: eventContent.head_commit?.url + '/checks',
-      description: `Workflow: ${workflow}`
-    }
+    embeds: [
+      {
+        author: {
+          name: eventContent.sender?.login,
+          url: eventContent.sender?.avatar_url,
+          icon_url: eventContent.sender?.html_url
+        },
+        color: color,
+        title: title,
+        url: eventContent.head_commit?.url + '/checks',
+        description: `Workflow: ${workflow}`
+      }
+    ]
   }
 
   try {
