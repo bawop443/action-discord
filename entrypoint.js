@@ -82,8 +82,8 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
     console.log('Message sent ! Shutting down ...');
     process.exit(0);
   } catch (error) {
-    console.error('Error :', err.response.status, err.response.statusText);
-    console.error('Message :', err.response ? err.response.data : err.message);
+    console.error('Error :', error.response.status, error.response.statusText);
+    console.error('Message :', error.response ? error.response.data : error.message);
     process.exit(1);
   }
 }
