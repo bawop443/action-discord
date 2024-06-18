@@ -68,8 +68,6 @@ function discordNotify(jobStatus, workflow, username, avatarUrl, eventContent, d
     }
   }
 
-  payload = JSON.stringify(payload);
-
   (async () => {
     console.log('Sending message ...');
     await axios.post(
