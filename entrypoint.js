@@ -36,7 +36,7 @@ discordNotify(
   process.env.DISCORD_WEBHOOK
 )
 
-function discordNotify(jobStatus, workflow, username, avatarUrl, eventContent, discordWebhookUrl) {
+async function discordNotify(jobStatus, workflow, username, avatarUrl, eventContent, discordWebhookUrl) {
   let color
   let title
   if (jobStatus == "success") {
@@ -68,7 +68,7 @@ function discordNotify(jobStatus, workflow, username, avatarUrl, eventContent, d
     }
   }
 
-  (async () => {
+  try {
     console.log('Sending message ...');
     await axios.post(
       `${discordWebhookUrl}?wait=true`,
@@ -81,11 +81,11 @@ function discordNotify(jobStatus, workflow, username, avatarUrl, eventContent, d
     );
     console.log('Message sent ! Shutting down ...');
     process.exit(0);
-  })().catch(err => {
+  } catch (error) {
     console.error('Error :', err.response.status, err.response.statusText);
     console.error('Message :', err.response ? err.response.data : err.message);
     process.exit(1);
-  });
+  }
 }
 
 // function getCommitMessage(commits, headCommit) {
