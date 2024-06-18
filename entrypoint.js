@@ -59,8 +59,8 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
       {
         author: {
           name: eventContent.sender?.login,
-          url: eventContent.sender?.avatar_url,
-          icon_url: eventContent.sender?.html_url
+          url: eventContent.sender?.html_url,
+          icon_url: eventContent.sender?.avatar_url
         },
         color: color,
         title: title,
