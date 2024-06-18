@@ -32,7 +32,7 @@ discordNotify(
   process.env.GITHUB_WORKFLOW,
   process.env.DISCORD_USERNAME,
   process.env.DISCORD_AVATAR,
-  eventContent,
+  JSON.parse(eventContent),
   process.env.DISCORD_WEBHOOK
 )
 
