@@ -52,6 +52,12 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
     title = `Action is ${jobStatus}.`
   }
 
+  const descriptionObj = {
+    Workflow: workflow,
+    Repository: process.env.GITHUB_REPOSITORY
+  }
+  const description = getDiscordDescription(descriptionObj, eventContent)
+
   const payload = {
     username: username || 'MC - Deploy Notification',
     avatar_url: avatarUrl || 'https://cdn.discordapp.com/attachments/988683025942454312/1095604009252966482/image_1.png?ex=666fdebf&is=666e8d3f&hm=8a919283a14b81683dc7cc5a4aa61e5117fc8769f8ac85bcb4d4fe1f24263e61&',
@@ -65,12 +71,7 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
         color: color,
         title: title,
         url: eventContent.head_commit?.url + '/checks',
-        description: 
-        `**Workflow**: ${workflow}
-
-        **Repository**: ${process.env.GITHUB_REPOSITORY}
-
-        **Commit**: [${eventContent.head_commit?.id?.slice(0, 7)}](${eventContent.head_commit?.url}) ${eventContent.head_commit?.message} - ${eventContent.head_commit?.author?.username}`
+        description: description
       }
     ]
   }
@@ -94,6 +95,17 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
     console.error('Message :', error.response ? error.response.data : error.message);
     process.exit(1);
   }
+}
+
+function getDiscordDescription(descriptionObj, eventContent) {
+  let description = ''
+  for (const key of Object.keys(descriptionObj)) {
+    description += `**${key}**: ${descriptionObj[key]}\n\n`
+  }
+  for (let i = 0; i < 5 && i < eventContent.commits.length ; i++) {
+    description += `\`[${eventContent.commits[i].id.slice(0, 7)}]\`(${eventContent.commits[i].url}) - ${eventContent.commits[i].author?.username || eventContent.commits[i].committer?.username}\n`
+  }
+  return description
 }
 
 // function getCommitMessage(commits, headCommit) {
