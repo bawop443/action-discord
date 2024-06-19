@@ -1,5 +1,13 @@
 const axios = require('axios');
 const fs = require('fs');
+const core = require('@actions/core');
+const github = require('@actions/github');
+
+const shouldNotiLine = core.getInput('line');
+const shouldNotiDiscord = core.getInput('discord');
+const eventPayload = github.context.payload;
+
+console.log("eventPayload", eventPayload)
 
 const REQUIRED_ENV_VARS = [
   'GITHUB_EVENT_PATH',
@@ -27,14 +35,20 @@ const eventContent = fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8');
 
 console.log("eventContent: ", eventContent)
 
-discordNotify(
-  process.env.GITHUB_JOB_STATUS,
-  process.env.GITHUB_WORKFLOW,
-  process.env.DISCORD_USERNAME,
-  process.env.DISCORD_AVATAR,
-  JSON.parse(eventContent),
-  process.env.DISCORD_WEBHOOK
-)
+if (shouldNotiDiscord === 'true') {
+  discordNotify(
+    process.env.GITHUB_JOB_STATUS,
+    process.env.GITHUB_WORKFLOW,
+    process.env.DISCORD_USERNAME,
+    process.env.DISCORD_AVATAR,
+    JSON.parse(eventContent),
+    process.env.DISCORD_WEBHOOK
+  )
+}
+
+if (shouldNotiLine === 'true') {
+
+}
 
 async function discordNotify(jobStatus, workflow, username, avatarUrl, eventContent, discordWebhookUrl) {
   let color

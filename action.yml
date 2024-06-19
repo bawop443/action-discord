@@ -1,14 +1,16 @@
-name: 'Actions for Discord'
-description: 'Outputs a message to Discord.'
-author: Ilshidur
+name: 'Discord and Line notification'
+description: 'Outputs a message to Discord and Line.'
+author: bawonsak
 branding:
   icon: message-square
   color: gray-dark
 inputs:
-  args:
-    description: 'The message to display in the Discord message.'
+  line:
+    description: 'The boolean to check if Line should notify.'
     required: false
-  # TODO: Handle configuration through Action inputs.
+  discord:
+    description: 'The boolean to check if Discord should notify.'
+    required: false
 runs:
   using: 'docker'
   image: 'Dockerfile'
