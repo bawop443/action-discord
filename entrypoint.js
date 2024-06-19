@@ -30,6 +30,8 @@ REQUIRED_ENV_VARS.forEach(env => {
 const eventPayload = github.context.payload;
 
 console.log("eventPayload: ", eventPayload)
+console.log("shouldNotiDiscord: ", shouldNotiDiscord)
+console.log("shouldNotiLine: ", shouldNotiLine)
 
 if (shouldNotiDiscord === 'true') {
   discordNotify(
