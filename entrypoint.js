@@ -103,7 +103,7 @@ function getDiscordDescription(descriptionObj, eventContent) {
     description += `**${key}**: ${descriptionObj[key]}\n\n`
   }
   for (let i = 0; i < 5 && i < eventContent.commits.length ; i++) {
-    description += `\`[${eventContent.commits[i].id.slice(0, 7)}]\`(${eventContent.commits[i].url}) - ${eventContent.commits[i].author?.username || eventContent.commits[i].committer?.username}\n`
+    description += `\`[${eventContent.commits[i].id.slice(0, 7)}](${eventContent.commits[i].url})\` - ${eventContent.commits[i].author?.username || eventContent.commits[i].committer?.username}\n`
   }
   return description
 }
