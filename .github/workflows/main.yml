@@ -1,25 +1,20 @@
-name: Notification on push
+name: DEV - Build
 
 on:
   push:
     branches:
-    - master
+      - 'master'
 
 jobs:
-  build:
-
+  notify:
     runs-on: ubuntu-latest
-
+    if: ${{ always() }}
     steps:
-    - name: Discord notification
-      env:
-        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        DISCORD_USERNAME: OSS 117
-        DISCORD_AVATAR: https://resize.programme-television.ladmedia.fr/r/670,670/img/var/premiere/storage/images/tele-7-jours/news-tv/oss-117-le-caire-nid-d-espions-c8-le-show-de-jean-dujardin-4484285/90175763-1-fre-FR/OSS-117-Le-Caire-nid-d-espions-C8-Le-show-de-Jean-Dujardin.jpg
-      uses: Ilshidur/action-discord@master
-      with:
-        args: 'A new commit has been pushed to Ilshidur/action-discord.'
-    - name: Discord notification
-      env:
-        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-      uses: Ilshidur/action-discord@master
+      - name: Discord notification
+        uses: bawop443/action-discord@master
+        env:
+          DISCORD_WEBHOOK: https://discord.com/api/webhooks/1209721626833461298/lRVrZbxErWDZwRjxgGbsZEBYv85qqP67upasvZDhAU13ihVzZZuGiovezoEKWHJTK0f2
+          DISCORD_USERNAME: MC - Deploy Notification
+          DISCORD_AVATAR: https://cdn.discordapp.com/attachments/988683025942454312/1095604009252966482/image_1.png?ex=666fdebf&is=666e8d3f&hm=8a919283a14b81683dc7cc5a4aa61e5117fc8769f8ac85bcb4d4fe1f24263e61&
+          GITHUB_JOB_STATUS: ${{ job.status }}
+          
