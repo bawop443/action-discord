@@ -53,10 +53,10 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
   }
 
   const descriptionObj = JSON.parse(JSON.stringify({
-    'Repository': process.env.GITHUB_REPOSITORY,
+    'Repository': `[${process.env.GITHUB_REPOSITORY}](${eventContent.repository.html_url})`,
     'Workflow': workflow,
     'Ref name': process.env.GITHUB_REF_NAME,
-    'Commit': eventContent.commits?.length ? eventContent.commits?.length + ' new commits' : null
+    'Commit': eventContent.commits?.length ? `[${eventContent.commits?.length} new commits](${eventContent.compare})` : null
   }))
   const description = getDiscordDescription(descriptionObj, eventContent)
 
