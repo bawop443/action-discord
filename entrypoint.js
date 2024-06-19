@@ -108,7 +108,7 @@ function getDiscordDescription(descriptionObj, eventContent) {
   if (eventContent.commits?.length) {
     description += `**Commit**: [${eventContent.commits?.length} new commits](${eventContent.compare})\n`
     for (let i = 0; i < 5 && i < eventContent.commits.length ; i++) {
-      description += `- \`[${eventContent.commits[i].id.slice(0, 7)}](${eventContent.commits[i].url})\` ${eventContent.commits[i].message} - ${eventContent.commits[i].author?.username || eventContent.commits[i].committer?.username}\n`
+      description += `- \`[${eventContent.commits[i].id.slice(0, 7)}]\`(${eventContent.commits[i].url}) ${eventContent.commits[i].message} - ${eventContent.commits[i].author?.username || eventContent.commits[i].committer?.username}\n`
     }
   }
   return description
