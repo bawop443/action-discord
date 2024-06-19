@@ -52,10 +52,12 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
     title = `Action is ${jobStatus}.`
   }
 
-  const descriptionObj = {
-    Workflow: workflow,
-    Repository: process.env.GITHUB_REPOSITORY
-  }
+  const descriptionObj = JSON.parse(JSON.stringify({
+    'Repository': process.env.GITHUB_REPOSITORY,
+    'Workflow': workflow,
+    'Ref name': process.env.GITHUB_REF_NAME,
+    'Commit': eventContent.commits?.length ? eventContent.commits?.length + ' new commits' : null
+  }))
   const description = getDiscordDescription(descriptionObj, eventContent)
 
   const payload = {
@@ -64,7 +66,7 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
     embeds: [
       {
         author: {
-          name: eventContent.sender?.login,
+          name: eventContent.sender?.login || process.env.GITHUB_ACTOR,
           url: eventContent.sender?.html_url,
           icon_url: eventContent.sender?.avatar_url
         },
@@ -105,7 +107,7 @@ function getDiscordDescription(descriptionObj, eventContent) {
     description += `**${key}**: ${descriptionObj[key]}\n\n`
   }
   for (let i = 0; i < 5 && i < eventContent.commits.length ; i++) {
-    description += `[${eventContent.commits[i].id.slice(0, 7)}](${eventContent.commits[i].url}) ${eventContent.commits[i].message} - ${eventContent.commits[i].author?.username || eventContent.commits[i].committer?.username}\n`
+    description += `-[${eventContent.commits[i].id.slice(0, 7)}](${eventContent.commits[i].url}) ${eventContent.commits[i].message} - ${eventContent.commits[i].author?.username || eventContent.commits[i].committer?.username}\n`
   }
   return description
 }
