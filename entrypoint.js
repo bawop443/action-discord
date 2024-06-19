@@ -5,9 +5,6 @@ const github = require('@actions/github');
 
 const shouldNotiLine = core.getInput('line');
 const shouldNotiDiscord = core.getInput('discord');
-const eventPayload = github.context.payload;
-
-console.log("eventPayload", eventPayload)
 
 const REQUIRED_ENV_VARS = [
   'GITHUB_EVENT_PATH',
@@ -31,9 +28,9 @@ REQUIRED_ENV_VARS.forEach(env => {
   }
 });
 
-const eventContent = fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8');
+const eventPayload = github.context.payload;
 
-console.log("eventContent: ", eventContent)
+console.log("eventPayload: ", eventPayload)
 
 if (shouldNotiDiscord === 'true') {
   discordNotify(
@@ -41,7 +38,7 @@ if (shouldNotiDiscord === 'true') {
     process.env.GITHUB_WORKFLOW,
     process.env.DISCORD_USERNAME,
     process.env.DISCORD_AVATAR,
-    JSON.parse(eventContent),
+    eventPayload,
     process.env.DISCORD_WEBHOOK
   )
 }
