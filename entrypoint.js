@@ -83,7 +83,7 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
         },
         color: color,
         title: title,
-        url: `${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,
+        url: join(eventContent.repository.html_url, 'actions', 'runs', process.env.GITHUB_RUN_ID),
         description: description
       }
     ]
