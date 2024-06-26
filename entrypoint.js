@@ -1,6 +1,7 @@
 const axios = require('axios');
 const core = require('@actions/core');
 const github = require('@actions/github');
+const { join } = require('path');
 
 const shouldNotiLine = core.getInput('line');
 const shouldNotiDiscord = core.getInput('discord');
@@ -13,10 +14,9 @@ const REQUIRED_ENV_VARS = [
   'GITHUB_EVENT_NAME',
   'GITHUB_ACTION',
   'DISCORD_WEBHOOK',
-  'GITHUB_JOB_STATUS'
+  'GITHUB_JOB_STATUS',
+  'GITHUB_RUN_ID'
 ];
-
-process.env.GITHUB_ACTION = process.env.GITHUB_ACTION || '<missing GITHUB_ACTION env var>';
 
 REQUIRED_ENV_VARS.forEach(env => {
   if (!process.env[env] || !process.env[env].length) {
@@ -83,7 +83,7 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
         },
         color: color,
         title: title,
-        url: eventContent.head_commit?.url + '/checks',
+        url: join(process.env.GITHUB_REPOSITORY, 'actions', 'runs', process.env.GITHUB_RUN_ID),
         description: description
       }
     ]
