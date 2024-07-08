@@ -29,7 +29,7 @@ REQUIRED_ENV_VARS.forEach(env => {
 
 const eventPayload = github.context.payload;
 
-console.log("eventPayload: ", eventPayload)
+console.log("eventPayload: ", JSON.stringify(eventPayload, null, 2))
 console.log("shouldNotiDiscord: ", shouldNotiDiscord)
 console.log("shouldNotiLine: ", shouldNotiLine)
 
@@ -89,7 +89,7 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
     ]
   }
 
-  console.log("payload", JSON.stringify(payload))
+  console.log("payload", JSON.stringify(payload, null, 2))
 
   try {
     console.log('Sending message ...');
