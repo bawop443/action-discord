@@ -73,7 +73,7 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
 
   const payload = {
     username: username || 'MC - Deploy Notification',
-    avatar_url: avatarUrl || 'https://media.discordapp.net/attachments/931082343064674335/1258651280050618368/IMG_0708.png?ex=6688d1d9&is=66878059&hm=74c98ef34c161868fc5ac9516f6e46fc83f373b055a3d5c7559dbf0d36f142b4&=&format=webp&quality=lossless&width=1002&height=749',
+    avatar_url: avatarUrl || 'https://cdn.discordapp.com/attachments/988683025942454312/1268082301942632480/IMG_6667.png?ex=66ab212c&is=66a9cfac&hm=21ce38167bfb7cd41eea5d77a7e0562d47767f35af7eb6ff53a22803ef8883f4&',
     embeds: [
       {
         author: {
