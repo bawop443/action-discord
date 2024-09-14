@@ -41,7 +41,7 @@ if (shouldNotiDiscord === 'true') {
     avatarUrl: process.env.DISCORD_AVATAR,
     eventContent: eventPayload,
     discordWebhookUrl: process.env.DISCORD_WEBHOOK,
-    addionalDesc: process.env.ADDIONAL_DESCRIPTION
+    additionalDesc: process.env.ADDITIONAL_DESCRIPTION
   }
   discordNotify(notiObj)
 }
@@ -50,7 +50,7 @@ if (shouldNotiLine === 'true') {
 
 }
 
-async function discordNotify({ jobStatus, workflow, username, avatarUrl, eventContent, discordWebhookUrl, addionalDesc }) {
+async function discordNotify({ jobStatus, workflow, username, avatarUrl, eventContent, discordWebhookUrl, additionalDesc }) {
   let color
   let title
   if (jobStatus == "success") {
@@ -67,17 +67,17 @@ async function discordNotify({ jobStatus, workflow, username, avatarUrl, eventCo
   }
 
   try {
-    addionalDesc = JSON.parse(addionalDesc)
+    additionalDesc = JSON.parse(additionalDesc)
   } catch (error) {
-    addionalDesc = {}
+    additionalDesc = {}
   }
-  
+
   const descriptionObj = JSON.parse(JSON.stringify({
     'Repository': `[${process.env.GITHUB_REPOSITORY}](${eventContent.repository.html_url})`,
     'Workflow': workflow,
     'Ref name': process.env.GITHUB_REF_NAME
   }))
-  const description = getDiscordDescription(Object.assign(descriptionObj, addionalDesc), eventContent)
+  const description = getDiscordDescription(Object.assign(descriptionObj, additionalDesc), eventContent)
 
   const payload = {
     username: username || 'MC - Deploy Notification',
