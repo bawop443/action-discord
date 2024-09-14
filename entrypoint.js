@@ -34,21 +34,23 @@ console.log("shouldNotiDiscord: ", shouldNotiDiscord)
 console.log("shouldNotiLine: ", shouldNotiLine)
 
 if (shouldNotiDiscord === 'true') {
-  discordNotify(
-    process.env.GITHUB_JOB_STATUS,
-    process.env.GITHUB_WORKFLOW,
-    process.env.DISCORD_USERNAME,
-    process.env.DISCORD_AVATAR,
-    eventPayload,
-    process.env.DISCORD_WEBHOOK
-  )
+  const notiObj = {
+    jobStatus: process.env.GITHUB_JOB_STATUS,
+    workflow: process.env.GITHUB_WORKFLOW,
+    username: process.env.DISCORD_USERNAME,
+    avatarUrl: process.env.DISCORD_AVATAR,
+    eventContent: eventPayload,
+    discordWebhookUrl: process.env.DISCORD_WEBHOOK,
+    addionalDesc: process.env.ADDIONAL_DESCRIPTION
+  }
+  discordNotify(notiObj)
 }
 
 if (shouldNotiLine === 'true') {
 
 }
 
-async function discordNotify(jobStatus, workflow, username, avatarUrl, eventContent, discordWebhookUrl) {
+async function discordNotify({ jobStatus, workflow, username, avatarUrl, eventContent, discordWebhookUrl, addionalDesc }) {
   let color
   let title
   if (jobStatus == "success") {
@@ -64,12 +66,18 @@ async function discordNotify(jobStatus, workflow, username, avatarUrl, eventCont
     title = `Action is ${jobStatus}.`
   }
 
+  try {
+    addionalDesc = JSON.parse(addionalDesc)
+  } catch (error) {
+    addionalDesc = {}
+  }
+  
   const descriptionObj = JSON.parse(JSON.stringify({
     'Repository': `[${process.env.GITHUB_REPOSITORY}](${eventContent.repository.html_url})`,
     'Workflow': workflow,
     'Ref name': process.env.GITHUB_REF_NAME
   }))
-  const description = getDiscordDescription(descriptionObj, eventContent)
+  const description = getDiscordDescription(Object.assign(descriptionObj, addionalDesc), eventContent)
 
   const payload = {
     username: username || 'MC - Deploy Notification',
@@ -119,7 +127,7 @@ function getDiscordDescription(descriptionObj, eventContent) {
   }
   if (eventContent.commits?.length) {
     description += `**Commit**: [${eventContent.commits?.length} new commits](${eventContent.compare})\n`
-    for (let i = 0; i < 5 && i < eventContent.commits.length ; i++) {
+    for (let i = 0; i < 5 && i < eventContent.commits.length; i++) {
       description += `- [\`${eventContent.commits[i].id.slice(0, 7)}\`](${eventContent.commits[i].url}) ${eventContent.commits[i].message} - ${eventContent.commits[i].author?.username || eventContent.commits[i].committer?.username}\n`
     }
   }
