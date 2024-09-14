@@ -69,6 +69,7 @@ async function discordNotify({ jobStatus, workflow, username, avatarUrl, eventCo
   try {
     additionalDesc = JSON.parse(additionalDesc)
   } catch (error) {
+    console.log("parse ADDITIONAL_DESCRIPTION error: ", error)
     additionalDesc = {}
   }
 
