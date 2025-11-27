@@ -1,7 +1,6 @@
 const axios = require('axios');
 const core = require('@actions/core');
 const github = require('@actions/github');
-const { join } = require('path');
 
 const shouldNotiLine = core.getInput('line');
 const shouldNotiDiscord = core.getInput('discord');
@@ -13,7 +12,6 @@ const REQUIRED_ENV_VARS = [
   'GITHUB_ACTOR',
   'GITHUB_EVENT_NAME',
   'GITHUB_ACTION',
-  'DISCORD_WEBHOOK',
   'GITHUB_JOB_STATUS',
   'GITHUB_RUN_ID'
 ];
@@ -40,19 +38,32 @@ if (shouldNotiDiscord === 'true') {
     username: process.env.DISCORD_USERNAME,
     avatarUrl: process.env.DISCORD_AVATAR,
     eventContent: eventPayload,
-    discordWebhookUrl: process.env.DISCORD_WEBHOOK,
     additionalDesc: process.env.ADDITIONAL_DESCRIPTION
   }
   discordNotify(notiObj)
 }
 
 if (shouldNotiLine === 'true') {
-
+  const notiObj = {
+    jobStatus: process.env.GITHUB_JOB_STATUS,
+    workflow: process.env.GITHUB_WORKFLOW,
+    eventContent: eventPayload,
+    additionalDesc: process.env.ADDITIONAL_DESCRIPTION
+  };
+  lineNotify(notiObj);
 }
 
-async function discordNotify({ jobStatus, workflow, username, avatarUrl, eventContent, discordWebhookUrl, additionalDesc }) {
+async function discordNotify({ jobStatus, workflow, username, avatarUrl, eventContent, additionalDesc }) {
+  const discordWebhookUrl = process.env.DISCORD_WEBHOOK;
+
+  if (!discordWebhookUrl) {
+    console.error('DISCORD_WEBHOOK is not defined');
+    return;
+  }
+
   let color
   let title
+
   if (jobStatus == "success") {
     title = "Action is successful."
     color = "5162540"
@@ -112,12 +123,110 @@ async function discordNotify({ jobStatus, workflow, username, avatarUrl, eventCo
       },
     );
     console.log('Message sent ! Shutting down ...');
-    process.exit(0);
+    // process.exit(0);
   } catch (error) {
     console.error('Error :', error.response.status, error.response.statusText);
     console.error('Full Error: ', error)
     console.error('Message :', error.response ? error.response.data : error.message);
-    process.exit(1);
+    // process.exit(1);
+  }
+}
+
+async function lineNotify({ jobStatus, workflow, eventContent, additionalDesc }) {
+  const channelToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  const to = process.env.LINE_DEST_ID;
+
+  if (!channelToken || !to) {
+    console.error('LINE_CHANNEL_ACCESS_TOKEN or LINE_DEST_ID is not defined');
+    return;
+  }
+
+  let statusEmoji;
+  let statusText;
+
+  if (jobStatus === 'success') {
+    statusEmoji = '✅';
+    statusText = 'SUCCESS';
+  } else if (jobStatus === 'failure') {
+    statusEmoji = '❌';
+    statusText = 'FAILURE';
+  } else if (jobStatus === 'cancelled') {
+    statusEmoji = '⚪️';
+    statusText = 'CANCELLED';
+  } else {
+    statusEmoji = 'ℹ️';
+    statusText = jobStatus.toUpperCase();
+  }
+
+  try {
+    additionalDesc = JSON.parse(additionalDesc);
+  } catch (error) {
+    console.log("parse ADDITIONAL_DESCRIPTION error (LINE): ", error);
+    additionalDesc = {};
+  }
+
+  const repoUrl = eventContent.repository?.html_url;
+  const runUrl = `${repoUrl}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+  const commits = eventContent.commits || [];
+
+  // build description similar to discord
+  const descLines = [];
+
+  descLines.push(`Repo: ${process.env.GITHUB_REPOSITORY}`);
+  descLines.push(`Workflow: ${workflow}`);
+  descLines.push(`Ref: ${process.env.GITHUB_REF_NAME}`);
+  descLines.push(`Actor: ${eventContent.sender?.login || process.env.GITHUB_ACTOR}`);
+
+  // additionalDesc (key-value)
+  for (const key of Object.keys(additionalDesc)) {
+    descLines.push(`${key}: ${additionalDesc[key]}`);
+  }
+
+  if (commits.length) {
+    descLines.push(`Commits: ${commits.length} new commits`);
+    for (let i = 0; i < 3 && i < commits.length; i++) {
+      const c = commits[i];
+      descLines.push(`- ${c.id.slice(0, 7)}: ${c.message} (${c.author?.username || c.committer?.username || c.author?.name})`);
+    }
+  }
+
+  descLines.push(`Run: ${runUrl}`);
+
+  const text = [
+    `[DEPLOY] ${statusEmoji} ${statusText}`,
+    '',
+    ...descLines
+  ].join('\n');
+
+  const payload = {
+    to,
+    messages: [
+      {
+        type: 'text',
+        text
+      }
+    ]
+  };
+
+  console.log("LINE payload", JSON.stringify(payload, null, 2));
+
+  try {
+    console.log('Sending LINE message ...');
+    await axios.post(
+      'https://api.line.me/v2/bot/message/push',
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${channelToken}`
+        }
+      }
+    );
+    console.log('LINE message sent!');
+  } catch (error) {
+    console.error('LINE Error :', error.response?.status, error.response?.statusText);
+    console.error('LINE Full Error: ', error);
+    console.error('LINE Message :', error.response ? JSON.stringify(error.response.data) : error.message);
   }
 }
 
