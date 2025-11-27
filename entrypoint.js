@@ -139,21 +139,27 @@ async function lineNotify({ jobStatus, workflow, eventContent, additionalDesc })
 
   let statusEmoji;
   let statusText;
+  let statusColor;
 
   if (jobStatus === 'success') {
     statusEmoji = '✅';
     statusText = 'SUCCESS';
+    statusColor = '#22c55e'; // green
   } else if (jobStatus === 'failure') {
     statusEmoji = '❌';
     statusText = 'FAILURE';
+    statusColor = '#ef4444'; // red
   } else if (jobStatus === 'cancelled') {
     statusEmoji = '⚪️';
     statusText = 'CANCELLED';
+    statusColor = '#9ca3af'; // gray
   } else {
     statusEmoji = 'ℹ️';
-    statusText = jobStatus.toUpperCase();
+    statusText = (jobStatus || 'UNKNOWN').toUpperCase();
+    statusColor = '#3b82f6'; // blue
   }
 
+  // parse additionalDesc (ใช้ร่วมกับฝั่ง Discord)
   try {
     additionalDesc = JSON.parse(additionalDesc);
   } catch (error) {
@@ -161,53 +167,262 @@ async function lineNotify({ jobStatus, workflow, eventContent, additionalDesc })
     additionalDesc = {};
   }
 
+  const repoName = process.env.GITHUB_REPOSITORY;
   const repoUrl = eventContent.repository?.html_url;
   const runUrl = `${repoUrl}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+  const compareUrl = eventContent.compare;
+  const refName = process.env.GITHUB_REF_NAME;
+  const actor = eventContent.sender?.login || process.env.GITHUB_ACTOR;
   const commits = eventContent.commits || [];
 
-  // build description similar to discord
-  const descLines = [];
+  // summary key-value (จะเอาไป map เป็น box ใน Flex)
+  const summaryItems = [
+    { label: 'Repository', value: repoName },
+    { label: 'Workflow', value: workflow },
+    { label: 'Ref',       value: refName },
+    // { label: 'Actor',     value: actor },
+  ];
 
-  descLines.push(`Repo: ${process.env.GITHUB_REPOSITORY}`);
-  descLines.push(`Workflow: ${workflow}`);
-  descLines.push(`Ref: ${process.env.GITHUB_REF_NAME}`);
-  descLines.push(`Actor: ${eventContent.sender?.login || process.env.GITHUB_ACTOR}`);
-
-  // additionalDesc (key-value)
   for (const key of Object.keys(additionalDesc)) {
-    descLines.push(`${key}: ${additionalDesc[key]}`);
+    summaryItems.push({ label: key, value: String(additionalDesc[key]) });
   }
 
+  // แปลง summaryItems → contents ของ Flex
+  const summaryBoxes = summaryItems.map(item => ({
+    type: 'box',
+    layout: 'baseline',
+    spacing: 'sm',
+    contents: [
+      {
+        type: 'text',
+        text: item.label,
+        flex: 3,
+        size: 'xs',
+        color: '#9ca3af'
+      },
+      {
+        type: 'text',
+        text: item.value,
+        flex: 7,
+        size: 'xs',
+        wrap: true,
+        color: '#ffffff'
+      }
+    ]
+  }));
+
+  // commit list (เอา top 3 พอ)
+  const commitBoxes = [];
   if (commits.length) {
-    descLines.push(`Commits: ${commits.length} new commits`);
     for (let i = 0; i < 3 && i < commits.length; i++) {
       const c = commits[i];
-      descLines.push(`- ${c.id.slice(0, 7)}: ${c.message} (${c.author?.username || c.committer?.username || c.author?.name})`);
+      const shortId = c.id.slice(0, 7);
+      const msg = c.message;
+      const authorName = c.author?.username || c.committer?.username || c.author?.name || 'unknown';
+
+      commitBoxes.push({
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'xs',
+        contents: [
+          {
+            type: 'text',
+            text: `${shortId} · ${authorName}`,
+            size: 'xs',
+            weight: 'bold',
+            color: '#e5e7eb'
+          },
+          {
+            type: 'text',
+            text: msg,
+            size: 'xs',
+            wrap: true,
+            color: '#d1d5db'
+          }
+        ]
+      });
     }
   }
 
-  descLines.push(`Run: ${runUrl}`);
+  const hasCommits = commitBoxes.length > 0;
 
-  const text = [
-    `[DEPLOY] ${statusEmoji} ${statusText}`,
-    '',
-    ...descLines
-  ].join('\n');
+  const flexBubble = {
+    type: 'bubble',
+    size: 'mega',
+    styles: {
+      body: {
+        backgroundColor: '#020617' // dark slate
+      },
+      footer: {
+        backgroundColor: '#020617'
+      },
+      header: {
+        backgroundColor: '#020617'
+      }
+    },
+    header: {
+      type: 'box',
+      layout: 'vertical',
+      paddingAll: '16px',
+      contents: [
+        {
+          type: 'box',
+          layout: 'baseline',
+          spacing: 'sm',
+          contents: [
+            {
+              type: 'text',
+              text: `${statusEmoji}  Deploy ${statusText}`,
+              weight: 'bold',
+              size: 'md',
+              color: '#f9fafb'
+            }
+          ]
+        },
+        {
+          type: 'box',
+          layout: 'baseline',
+          margin: 'sm',
+          contents: [
+            {
+              type: 'text',
+              text: repoName,
+              size: 'xs',
+              color: '#9ca3af',
+              wrap: true
+            }
+          ]
+        }
+      ]
+    },
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      paddingAll: '16px',
+      spacing: 'md',
+      contents: [
+        // status pill
+        {
+          type: 'box',
+          layout: 'horizontal',
+          paddingAll: '6px',
+          cornerRadius: '999px',
+          backgroundColor: `${statusColor}1A`,
+          contents: [
+            {
+              type: 'text',
+              text: statusText,
+              size: 'xs',
+              weight: 'bold',
+              color: statusColor,
+              align: 'center'
+            }
+          ]
+        },
+        // summary section
+        {
+          type: 'box',
+          layout: 'vertical',
+          spacing: 'sm',
+          margin: 'md',
+          contents: [
+            {
+              type: 'text',
+              text: 'Summary',
+              size: 'sm',
+              weight: 'bold',
+              color: '#e5e7eb'
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              spacing: 'sm',
+              margin: 'xs',
+              contents: summaryBoxes
+            }
+          ]
+        },
+        // commit section
+        ...(hasCommits ? [{
+          type: 'box',
+          layout: 'vertical',
+          spacing: 'sm',
+          margin: 'md',
+          contents: [
+            {
+              type: 'text',
+              text: `Commits (${commits.length})`,
+              size: 'sm',
+              weight: 'bold',
+              color: '#e5e7eb'
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              spacing: 'sm',
+              margin: 'xs',
+              contents: commitBoxes
+            }
+          ]
+        }] : [])
+      ]
+    },
+    footer: {
+      type: 'box',
+      layout: 'vertical',
+      spacing: 'sm',
+      paddingAll: '12px',
+      contents: [
+        {
+          type: 'button',
+          style: 'primary',
+          height: 'sm',
+          color: statusColor,
+          action: {
+            type: 'uri',
+            label: 'View Run',
+            uri: runUrl
+          }
+        },
+        {
+          type: 'button',
+          style: 'secondary',
+          height: 'sm',
+          action: {
+            type: 'uri',
+            label: 'View Repo',
+            uri: repoUrl
+          }
+        },
+        ...(compareUrl ? [{
+          type: 'button',
+          style: 'secondary',
+          height: 'sm',
+          action: {
+            type: 'uri',
+            label: 'View Diff',
+            uri: compareUrl
+          }
+        }] : [])
+      ]
+    }
+  };
 
   const payload = {
     to,
     messages: [
       {
-        type: 'text',
-        text
+        type: 'flex',
+        altText: `[DEPLOY] ${statusText} - ${repoName} (${refName})`,
+        contents: flexBubble
       }
     ]
   };
 
-  console.log("LINE payload", JSON.stringify(payload, null, 2));
+  console.log("LINE FLEX payload", JSON.stringify(payload, null, 2));
 
   try {
-    console.log('Sending LINE message ...');
+    console.log('Sending LINE Flex message ...');
     await axios.post(
       'https://api.line.me/v2/bot/message/push',
       payload,
@@ -218,13 +433,14 @@ async function lineNotify({ jobStatus, workflow, eventContent, additionalDesc })
         }
       }
     );
-    console.log('LINE message sent!');
+    console.log('LINE Flex message sent!');
   } catch (error) {
     console.error('LINE Error :', error.response?.status, error.response?.statusText);
     console.error('LINE Full Error: ', error);
     console.error('LINE Message :', error.response ? JSON.stringify(error.response.data) : error.message);
   }
 }
+
 
 function getDiscordDescription(descriptionObj, eventContent) {
   let description = ''
