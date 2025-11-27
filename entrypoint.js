@@ -27,10 +27,6 @@ REQUIRED_ENV_VARS.forEach(env => {
 
 const eventPayload = github.context.payload;
 
-console.log("eventPayload: ", JSON.stringify(eventPayload, null, 2))
-console.log("shouldNotiDiscord: ", shouldNotiDiscord)
-console.log("shouldNotiLine: ", shouldNotiLine)
-
 if (shouldNotiDiscord === 'true') {
   const notiObj = {
     jobStatus: process.env.GITHUB_JOB_STATUS,
