@@ -40,13 +40,13 @@ if (shouldNotiDiscord === 'true') {
 }
 
 if (shouldNotiLine === 'true') {
-  const notiObj = {
-    jobStatus: process.env.GITHUB_JOB_STATUS,
-    workflow: process.env.GITHUB_WORKFLOW,
-    eventContent: eventPayload,
-    additionalDesc: process.env.ADDITIONAL_DESCRIPTION
-  };
-  lineNotify(notiObj);
+  // const notiObj = {
+  //   jobStatus: process.env.GITHUB_JOB_STATUS,
+  //   workflow: process.env.GITHUB_WORKFLOW,
+  //   eventContent: eventPayload,
+  //   additionalDesc: process.env.ADDITIONAL_DESCRIPTION
+  // };
+  // lineNotify(notiObj);
 }
 
 async function discordNotify({ jobStatus, workflow, username, avatarUrl, eventContent, additionalDesc }) {
